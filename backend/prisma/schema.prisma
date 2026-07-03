@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------
+// ADMIN UPLOADS
+// ----------------------------------------
+
+model Liturgy {
+  id        Int      @id @default(autoincrement())
+  title     String
+  date      DateTime
+  fileUrl   String
+  createdAt DateTime @default(now())
+}
+
+model News {
+  id          Int      @id @default(autoincrement())
+  title       String
+  date        DateTime
+  fileUrl     String?  // PDF or Image
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model Gallery {
+  id        Int      @id @default(autoincrement())
+  title     String
+  imageUrl  String
+  category  String   @default("Umum")
+  createdAt DateTime @default(now())
+}
+
+model Activity {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  imageUrl    String
+  createdAt   DateTime @default(now())
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  day         String
+  title       String
+  location    String
+  time        String
+  category    String
+  icon        String?
+  iconBg      String?
+  iconColor   String?
+  createdAt   DateTime @default(now())
+}
+
+// ----------------------------------------
+// SERVICE FORMS (LAYANAN)
+// ----------------------------------------
+
+model NewMember {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  contactNumber  String
+  address        String
+  previousChurch String?
+  notes          String?
+  transferLetterUrl String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
+
+model Baptism {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  parentName     String
+  birthDate      DateTime
+  birthPlace     String
+  contactNumber  String
+  birthCertificateUrl String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
+
+model Catechism {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  birthDate      DateTime
+  birthPlace     String
+  contactNumber  String
+  address        String
+  baptismCertificateUrl String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
+
+model MoveOut {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  contactNumber  String
+  currentAddress String
+  destination    String
+  reason         String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
+
+model Obituary {
+  id             Int      @id @default(autoincrement())
+  deceasedName   String
+  reporterName   String
+  contactNumber  String
+  dateOfDeath    DateTime
+  address        String
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
+
+model Suggestion {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  topic     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model AdminUser {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}

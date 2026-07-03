@@ -1,0 +1,117 @@
+export const scheduleData = {
+  Senin: [
+    {
+      title: 'Latihan Paduan Suara Ina',
+      location: 'Gedung Gereja Lt. 2',
+      time: '19:00 - 21:00 WIB',
+      category: 'Kategorial Ina',
+      icon: 'library_music',
+      iconBg: 'bg-secondary-container/60',
+      iconColor: 'text-on-secondary-container',
+    },
+  ],
+  Selasa: [
+    {
+      title: 'Persekutuan Doa',
+      location: 'Ruang Serbaguna',
+      time: '19:00 - 20:30 WIB',
+      category: 'Umum',
+      icon: 'folded_hands',
+      iconBg: 'bg-primary-container/60',
+      iconColor: 'text-on-primary-container',
+    },
+  ],
+  Rabu: [
+    {
+      title: 'Latihan Paduan Suara Naposo',
+      location: 'Gedung Gereja Lt. 2',
+      time: '19:30 - 21:30 WIB',
+      category: 'Kategorial Naposo',
+      icon: 'library_music',
+      iconBg: 'bg-tertiary-container/60',
+      iconColor: 'text-on-tertiary-container',
+    },
+  ],
+  Kamis: [
+    {
+      title: 'Pendalaman Alkitab (PA)',
+      location: 'Ruang Serbaguna & Live Streaming',
+      time: '19:00 - 20:30 WIB',
+      category: 'Umum',
+      icon: 'menu_book',
+      iconBg: 'bg-primary-container/60',
+      iconColor: 'text-on-primary-container',
+    },
+    {
+      title: 'Latihan Paduan Suara Ama',
+      location: 'Gedung Gereja Lt. 2',
+      time: '20:00 - 21:30 WIB',
+      category: 'Kategorial Ama',
+      icon: 'library_music',
+      iconBg: 'bg-[#bae6fd]/50',
+      iconColor: 'text-[#0369a1]',
+    },
+    {
+      title: 'Rapat Parhalado',
+      location: 'Ruang Konsistori',
+      time: '18:00 - Selesai',
+      category: 'Parhalado',
+      icon: 'group',
+      iconBg: 'bg-tertiary-container/60',
+      iconColor: 'text-on-tertiary-container',
+    },
+  ],
+  Jumat: [
+    {
+      title: 'Kebaktian Kaum Bapak',
+      location: 'Ruang Serbaguna',
+      time: '19:00 - 20:30 WIB',
+      category: 'Kategorial Ama',
+      icon: 'groups',
+      iconBg: 'bg-primary-container/60',
+      iconColor: 'text-on-primary-container',
+    },
+  ],
+  Sabtu: [
+    {
+      title: 'Sekolah Minggu',
+      location: 'Gedung Gereja Lt. 1',
+      time: '09:00 - 11:00 WIB',
+      category: 'Anak',
+      icon: 'child_care',
+      iconBg: 'bg-secondary-container/60',
+      iconColor: 'text-on-secondary-container',
+    },
+    {
+      title: 'Persekutuan Naposo',
+      location: 'Gedung Gereja Lt. 2',
+      time: '17:00 - 19:00 WIB',
+      category: 'Kategorial Naposo',
+      icon: 'diversity_3',
+      iconBg: 'bg-tertiary-container/60',
+      iconColor: 'text-on-tertiary-container',
+    },
+  ],
+  Minggu: [
+    {
+      title: 'Ibadah Minggu Pagi',
+      location: 'Gedung Gereja Utama',
+      time: '09:00 - 11:00 WIB',
+      category: 'Umum',
+      icon: 'church',
+      iconBg: 'bg-primary-container/60',
+      iconColor: 'text-on-primary-container',
+    },
+    {
+      title: 'Ibadah Minggu Sore',
+      location: 'Gedung Gereja Utama',
+      time: '17:00 - 18:30 WIB',
+      category: 'Umum',
+      icon: 'church',
+      iconBg: 'bg-primary-container/60',
+      iconColor: 'text-on-primary-container',
+    },
+  ],
+}
+
+export const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
