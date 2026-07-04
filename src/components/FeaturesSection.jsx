@@ -9,13 +9,6 @@ const features = [
     path: '/tata-ibadah',
   },
   {
-    icon: 'menu_book',
-    title: 'Alkitab',
-    iconColor: 'text-secondary',
-    bgIcon: 'bg-secondary-container/20',
-    path: '/alkitab',
-  },
-  {
     icon: 'campaign',
     title: 'Warta Jemaat',
     iconColor: 'text-secondary',
@@ -36,6 +29,13 @@ const features = [
     bgIcon: 'bg-primary-container/20',
     path: '/layanan',
   },
+  {
+    icon: 'menu_book',
+    title: 'Alkitab',
+    iconColor: 'text-secondary',
+    bgIcon: 'bg-secondary-container/20',
+    path: '/alkitab',
+  },
 ]
 
 export default function FeaturesSection() {
@@ -49,8 +49,8 @@ export default function FeaturesSection() {
           <h2 className="font-headline-md text-[20px] text-on-surface">Akses Cepat</h2>
         </div>
 
-        {/* 5 Columns Grid - Forces items to be side-by-side even on mobile */}
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-4 md:gap-8">
+        {/* 4 Columns Grid - Makes the 5th item wrap to the next row exactly under the 1st item */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-4 md:gap-8">
           {features.map((f) => (
             <Link
               key={f.title}
