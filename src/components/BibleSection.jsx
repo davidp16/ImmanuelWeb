@@ -119,7 +119,12 @@ export default function BibleSection() {
     setVersesData(null)
     try {
       const versionToFetch = lang === 'indonesia' ? 'tb' : 'toba'
-      const data = await fetchChapter(selectedBook.abbr, chapterNumber, versionToFetch)
+      
+      // alkitab.mobi scraper expects Indonesian standard abbreviations (e.g. 'Kej') even for Toba.
+      const originalIndex = currentTestament.books.indexOf(selectedBook)
+      const fetchAbbr = bibleBooks.indonesia[testament === 'old' ? 'oldTestament' : 'newTestament'].books[originalIndex].abbr
+      
+      const data = await fetchChapter(fetchAbbr, chapterNumber, versionToFetch)
       setVersesData(data)
     } catch (err) {
       console.error(err)
