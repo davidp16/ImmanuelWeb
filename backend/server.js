@@ -26,11 +26,13 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const bibleRoutes = require('./routes/bibleRoutes');
+const songRoutes = require('./routes/songRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bible', bibleRoutes);
+app.use('/api/songs', songRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

@@ -7,6 +7,8 @@ import GalleryPage from './pages/GalleryPage'
 import MinistryPage from './pages/MinistryPage'
 import ActivityDetailPage from './pages/ActivityDetailPage'
 import BiblePage from './pages/BiblePage'
+import BukuEndePage from './pages/BukuEndePage'
+import KidungJemaatPage from './pages/KidungJemaatPage'
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/alkitab" element={<BiblePage />} />
+        <Route path="/buku-ende" element={<BukuEndePage />} />
+        <Route path="/kidung-jemaat" element={<KidungJemaatPage />} />
         <Route path="/layanan" element={<ServicesPage />} />
         <Route path="/tata-ibadah" element={<LiturgyPage />} />
         <Route path="/warta" element={<NewsPage />} />
