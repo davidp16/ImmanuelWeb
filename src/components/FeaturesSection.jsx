@@ -36,6 +36,20 @@ const features = [
     bgIcon: 'bg-secondary-container/20',
     path: '/alkitab',
   },
+  {
+    icon: 'queue_music',
+    title: 'Buku Ende',
+    iconColor: 'text-tertiary',
+    bgIcon: 'bg-tertiary-container/20',
+    path: '/buku-ende',
+  },
+  {
+    icon: 'music_note',
+    title: 'Kidung Jemaat',
+    iconColor: 'text-primary',
+    bgIcon: 'bg-primary-container/20',
+    path: '/kidung-jemaat',
+  },
 ]
 
 export default function FeaturesSection() {
