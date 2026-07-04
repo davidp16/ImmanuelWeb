@@ -9,6 +9,13 @@ const features = [
     path: '/tata-ibadah',
   },
   {
+    icon: 'menu_book',
+    title: 'Alkitab',
+    iconColor: 'text-secondary',
+    bgIcon: 'bg-secondary-container/20',
+    path: '/alkitab',
+  },
+  {
     icon: 'campaign',
     title: 'Warta Jemaat',
     iconColor: 'text-secondary',
@@ -28,13 +35,6 @@ const features = [
     iconColor: 'text-primary',
     bgIcon: 'bg-primary-container/20',
     path: '/layanan',
-  },
-  {
-    icon: 'menu_book',
-    title: 'Alkitab',
-    iconColor: 'text-secondary',
-    bgIcon: 'bg-secondary-container/20',
-    path: '/alkitab',
   },
 ]
 
