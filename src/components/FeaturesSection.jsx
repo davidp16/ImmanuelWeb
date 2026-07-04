@@ -50,6 +50,13 @@ const features = [
     bgIcon: 'bg-primary-container/20',
     path: '/kidung-jemaat',
   },
+  {
+    icon: 'apps',
+    title: 'Lainnya',
+    iconColor: 'text-on-surface-variant',
+    bgIcon: 'bg-surface-variant/20',
+    path: '/lainnya',
+  },
 ]
 
 export default function FeaturesSection() {
