@@ -1,23 +1,20 @@
 // ===== Bible API Service =====
-// Using Beeble Indonesia API — free, no auth required
-// Docs: https://beeble.vercel.app/docs
-
-// In development, requests go through Vite proxy to avoid CORS.
-// In production, configure your hosting to proxy /api to beeble.vercel.app
-const BASE_URL = '/api/v1'
+// Using Local Backend API for Zero Cold-Start
+const BASE_URL = '/api/bible'
 
 // Cache for fetched chapters (avoid refetching)
 const cache = new Map()
 
 /**
- * Fetch the passage list from the Beeble API
+ * Fetch the passage list from the API
+ * @param {string} version - 'tb' or 'toba'
  * @returns {Promise<Array<{ no: number, abbr: string, name: string, chapter: number }>>}
  */
-export async function fetchPassageList() {
-  const cacheKey = '_passage_list'
+export async function fetchPassageList(version = 'tb') {
+  const cacheKey = `_passage_list_${version}`
   if (cache.has(cacheKey)) return cache.get(cacheKey)
 
-  const response = await fetch(`${BASE_URL}/passage/list`)
+  const response = await fetch(`${BASE_URL}/list?version=${version}`)
   if (!response.ok) {
     throw new Error(`Gagal mengambil daftar kitab: ${response.status}`)
   }
@@ -29,19 +26,20 @@ export async function fetchPassageList() {
 }
 
 /**
- * Fetch a chapter's verses from the Beeble API
+ * Fetch a chapter's verses from the API
  * @param {string} abbr - Book abbreviation (e.g. "Kej", "Mat")
  * @param {number} chapter - Chapter number
+ * @param {string} version - 'tb' or 'toba'
  * @returns {Promise<{ verses: Array<{ verse: number, text: string, title: string }>, bookName: string, chapter: number, version: string }>}
  */
-export async function fetchChapter(abbr, chapter) {
-  const cacheKey = `${abbr}_${chapter}`
+export async function fetchChapter(abbr, chapter, version = 'tb') {
+  const cacheKey = `${abbr}_${chapter}_${version}`
 
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey)
   }
 
-  const url = `${BASE_URL}/passage/${encodeURIComponent(abbr)}/${chapter}`
+  const url = `${BASE_URL}/passage/${encodeURIComponent(abbr)}/${chapter}?version=${version}`
   const response = await fetch(url)
 
   if (!response.ok) {
@@ -49,7 +47,7 @@ export async function fetchChapter(abbr, chapter) {
   }
 
   const json = await response.json()
-  const result = parseBeebleResponse(json, abbr, chapter)
+  const result = parseBeebleResponse(json, abbr, chapter, version)
   cache.set(cacheKey, result)
   return result
 }
@@ -59,13 +57,14 @@ export async function fetchChapter(abbr, chapter) {
  * Beeble returns: { data: { book: { no, name, chapter }, verses: [{ verse, type, content }] } }
  * We normalize to: { verses: [{ verse, text, title }], bookName, chapter, version }
  */
-function parseBeebleResponse(json, abbr, chapter) {
+function parseBeebleResponse(json, abbr, chapter, versionParam) {
   const verses = []
+  const versionName = versionParam === 'toba' ? 'Batak Toba (TOBA)' : 'Terjemahan Baru (TB)'
 
   try {
     const data = json.data
     if (!data || !data.verses) {
-      return { verses: [], bookName: abbr, chapter, version: 'Terjemahan Baru (TB)' }
+      return { verses: [], bookName: abbr, chapter, version: versionName }
     }
 
     let pendingTitle = ''
@@ -88,12 +87,12 @@ function parseBeebleResponse(json, abbr, chapter) {
       verses,
       bookName: data.book?.name || abbr,
       chapter: data.book?.chapter || chapter,
-      version: 'Terjemahan Baru (TB)',
+      version: versionName,
       bookAbbr: abbr,
     }
   } catch {
     console.error('Error parsing Beeble response:', json)
-    return { verses: [], bookName: abbr, chapter, version: 'Terjemahan Baru (TB)' }
+    return { verses: [], bookName: abbr, chapter, version: versionName }
   }
 }
 

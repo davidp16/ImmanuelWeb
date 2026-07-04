@@ -73,7 +73,7 @@ router.post('/catechism', upload.single('file'), async (req, res) => {
 });
 
 // Pindah Keluar
-router.post('/move-out', async (req, res) => {
+router.post('/move-out', upload.none(), async (req, res) => {
   try {
     const data = req.body;
     const result = await prisma.moveOut.create({ data });
@@ -84,7 +84,7 @@ router.post('/move-out', async (req, res) => {
 });
 
 // Berita Duka
-router.post('/obituary', async (req, res) => {
+router.post('/obituary', upload.none(), async (req, res) => {
   try {
     const { dateOfDeath, ...rest } = req.body;
     const data = { ...rest, dateOfDeath: new Date(dateOfDeath) };
@@ -96,7 +96,7 @@ router.post('/obituary', async (req, res) => {
 });
 
 // Kotak Saran
-router.post('/suggestion', async (req, res) => {
+router.post('/suggestion', upload.none(), async (req, res) => {
   try {
     const data = req.body;
     const result = await prisma.suggestion.create({ data });

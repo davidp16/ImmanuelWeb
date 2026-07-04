@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { bibleBooks, uiLabels } from '../data/bibleData'
+import { fetchChapter } from '../data/bibleService'
 
 // ───────────────────────────────────────────
 // Animated number counter for stats
@@ -58,6 +59,9 @@ export default function BibleSection() {
   const [testament, setTestament] = useState('old')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedBook, setSelectedBook] = useState(null)
+  const [selectedChapter, setSelectedChapter] = useState(null)
+  const [versesData, setVersesData] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const sectionRef = useRef(null)
 
@@ -88,6 +92,8 @@ export default function BibleSection() {
       setLang(newLang)
       setSearchQuery('')
       setSelectedBook(null)
+      setSelectedChapter(null)
+      setVersesData(null)
       setIsTransitioning(false)
     }, 200)
   }
@@ -100,8 +106,27 @@ export default function BibleSection() {
       setTestament(t)
       setSearchQuery('')
       setSelectedBook(null)
+      setSelectedChapter(null)
+      setVersesData(null)
       setIsTransitioning(false)
     }, 200)
+  }
+
+  // Handle Chapter Click
+  const handleChapterClick = async (chapterNumber) => {
+    setSelectedChapter(chapterNumber)
+    setIsLoading(true)
+    setVersesData(null)
+    try {
+      const versionToFetch = lang === 'indonesia' ? 'tb' : 'toba'
+      const data = await fetchChapter(selectedBook.abbr, chapterNumber, versionToFetch)
+      setVersesData(data)
+    } catch (err) {
+      console.error(err)
+      setVersesData({ verses: [], error: true })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -257,16 +282,80 @@ export default function BibleSection() {
             </div>
 
             {/* Chapter Grid */}
-            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 sm:gap-2.5">
-              {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((ch) => (
-                <button
-                  key={ch}
-                  className="aspect-square rounded-xl bg-surface-container-lowest border border-outline-variant/20 font-label-md text-[13px] sm:text-[14px] text-on-surface-variant hover:bg-primary hover:text-on-primary hover:border-primary hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
-                >
-                  {ch}
-                </button>
-              ))}
-            </div>
+            {!selectedChapter && (
+              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 sm:gap-2.5 animate-fade-in-up">
+                {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((ch) => (
+                  <button
+                    key={ch}
+                    onClick={() => handleChapterClick(ch)}
+                    className="aspect-square rounded-xl bg-surface-container-lowest border border-outline-variant/20 font-label-md text-[13px] sm:text-[14px] text-on-surface-variant hover:bg-primary hover:text-on-primary hover:border-primary hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
+                  >
+                    {ch}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Verses View */}
+            {selectedChapter && (
+              <div className="mt-6 animate-fade-in-up">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-outline-variant/30">
+                  <button
+                    onClick={() => {
+                      setSelectedChapter(null)
+                      setVersesData(null)
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant font-label-md text-sm"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                    {lang === 'indonesia' ? 'Kembali ke Pasal' : 'Mulak'}
+                  </button>
+                  <h4 className="font-headline-md text-lg sm:text-xl text-primary">
+                    Pasal {selectedChapter}
+                  </h4>
+                </div>
+
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <span className="material-symbols-outlined text-[40px] text-primary animate-spin mb-4">
+                      sync
+                    </span>
+                    <p className="text-on-surface-variant font-body-md animate-pulse">
+                      {lang === 'indonesia' ? 'Memuat ayat...' : 'Paimahon ayat...'}
+                    </p>
+                  </div>
+                ) : versesData?.error || versesData?.verses?.length === 0 ? (
+                  <div className="text-center py-12">
+                    <span className="material-symbols-outlined text-[48px] text-error mb-4 block">
+                      error
+                    </span>
+                    <p className="text-on-surface-variant font-body-md">
+                      {lang === 'indonesia' ? 'Gagal memuat ayat. Pastikan server lokal sudah menyala dan data tersedia.' : 'Gagal memuat ayat.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 sm:space-y-5 max-w-3xl mx-auto">
+                    {versesData?.verses.map((v, i) => (
+                      <div key={i} className="flex gap-4 group">
+                        <span className="font-label-md text-[13px] text-primary opacity-60 mt-1 shrink-0 w-6 text-right">
+                          {v.verse}
+                        </span>
+                        <div>
+                          {v.title && (
+                            <h5 className="font-headline-sm text-[16px] text-secondary mb-2">
+                              {v.title}
+                            </h5>
+                          )}
+                          <p className="font-body-lg text-[15px] sm:text-[17px] text-on-surface leading-relaxed text-justify">
+                            {v.text}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -336,11 +425,11 @@ export default function BibleSection() {
       {/* ─── Bottom Info ─── */}
       <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
         <div className="flex items-center gap-2 text-on-surface-variant/60">
-          <span className="material-symbols-outlined text-[16px]">info</span>
+          <span className="material-symbols-outlined text-[16px]">verified</span>
           <span className="font-label-sm text-[11px] sm:text-[12px]">
             {lang === 'indonesia'
-              ? 'Konten ayat akan segera tersedia dalam pembaruan selanjutnya.'
-              : 'Isi ni ayat laho ro di pambaruan na naeng ro.'}
+              ? 'Teks dialirkan secara lokal untuk kecepatan 0 detik.'
+              : 'Teks dialirkan secara lokal untuk kecepatan 0 detik.'}
           </span>
         </div>
       </div>
