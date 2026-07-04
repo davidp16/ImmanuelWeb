@@ -3,12 +3,12 @@ import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
 
 const servicesList = [
-  { id: 'new-member', title: 'Pendaftaran Jemaat Baru', icon: 'group_add', description: 'Formulir untuk mendaftar sebagai anggota jemaat baru.' },
-  { id: 'baptism', title: 'Pendaftaran Baptis Kudus', icon: 'water_drop', description: 'Pengajuan jadwal pelayanan Baptis Kudus.' },
-  { id: 'catechism', title: 'Pendaftaran Katekisasi Sidi', icon: 'menu_book', description: 'Pendaftaran kelas sidi bagi remaja/dewasa.' },
-  { id: 'move-out', title: 'Pengajuan Pindah Keluar', icon: 'transfer_within_a_station', description: 'Formulir administrasi pindah ke gereja lain.' },
-  { id: 'obituary', title: 'Pelaporan Berita Duka', icon: 'deceased', description: 'Laporkan berita duka cita jemaat.' },
-  { id: 'suggestion', title: 'Kotak Saran', icon: 'mark_email_unread', description: 'Kirimkan saran atau kritik membangun.' },
+  { id: 'new-member', title: 'Jemaat Baru', icon: 'group_add', color: 'text-primary', bg: 'bg-primary-container/20', description: 'Formulir untuk mendaftar sebagai anggota jemaat baru.' },
+  { id: 'baptism', title: 'Baptis Kudus', icon: 'water_drop', color: 'text-secondary', bg: 'bg-secondary-container/20', description: 'Pengajuan jadwal pelayanan Baptis Kudus.' },
+  { id: 'catechism', title: 'Katekisasi Sidi', icon: 'menu_book', color: 'text-tertiary', bg: 'bg-tertiary-container/20', description: 'Pendaftaran kelas sidi bagi remaja/dewasa.' },
+  { id: 'move-out', title: 'Pindah Keluar', icon: 'transfer_within_a_station', color: 'text-primary', bg: 'bg-primary-container/20', description: 'Formulir administrasi pindah ke gereja lain.' },
+  { id: 'obituary', title: 'Berita Duka', icon: 'church', color: 'text-secondary', bg: 'bg-secondary-container/20', description: 'Laporkan berita duka cita jemaat.' },
+  { id: 'suggestion', title: 'Kotak Saran', icon: 'mark_email_unread', color: 'text-tertiary', bg: 'bg-tertiary-container/20', description: 'Kirimkan saran atau kritik membangun.' },
 ];
 
 export default function ServicesPage() {
@@ -140,20 +140,27 @@ export default function ServicesPage() {
         </div>
 
         {!activeForm ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {servicesList.map((service) => (
-              <div 
-                key={service.id}
-                onClick={() => setActiveForm(service.id)}
-                className="glass-panel p-6 rounded-2xl sm:rounded-3xl cursor-pointer hover:scale-[1.02] transition-transform duration-300 border border-outline-variant/20 flex flex-col items-center text-center gap-3 bg-surface-container hover:bg-surface-container-high"
-              >
-                <div className="w-14 h-14 rounded-full bg-primary-container/20 text-primary flex items-center justify-center mb-2">
-                  <span className="material-symbols-outlined text-[28px]">{service.icon}</span>
+          <div className="max-w-4xl mx-auto bg-surface-container-lowest sm:bg-surface rounded-3xl p-6 sm:p-10 shadow-sm sm:shadow-lg border border-outline-variant/15 sm:border-outline-variant/20">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6 sm:gap-8 justify-items-center">
+              {servicesList.map((service) => (
+                <div 
+                  key={service.id}
+                  onClick={() => setActiveForm(service.id)}
+                  className="flex flex-col items-center gap-3 group outline-none cursor-pointer"
+                >
+                  <div className={`w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-[1.15rem] sm:rounded-3xl bg-surface-container-lowest border border-outline-variant/20 shadow-sm flex items-center justify-center group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300 relative overflow-hidden`}>
+                    <div className={`absolute inset-0 ${service.bg} opacity-50`}></div>
+                    <span className={`material-symbols-outlined icon-fill text-[32px] sm:text-[40px] ${service.color} relative z-10`}>
+                      {service.icon}
+                    </span>
+                  </div>
+                  
+                  <span className="font-label-md text-[12px] sm:text-[14px] text-on-surface font-medium text-center leading-tight px-1 max-w-[90px] sm:max-w-[110px]">
+                    {service.title}
+                  </span>
                 </div>
-                <h3 className="font-headline-md text-lg text-on-surface">{service.title}</h3>
-                <p className="font-body-sm text-on-surface-variant">{service.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ) : (
           <div className="max-w-2xl mx-auto glass-panel p-6 sm:p-8 rounded-3xl border border-outline-variant/20 bg-surface-container">

@@ -9,10 +9,12 @@ import ActivityDetailPage from './pages/ActivityDetailPage'
 import BiblePage from './pages/BiblePage'
 import BukuEndePage from './pages/BukuEndePage'
 import KidungJemaatPage from './pages/KidungJemaatPage'
+import ScrollToTop from './components/ScrollToTop'
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/alkitab" element={<BiblePage />} />
