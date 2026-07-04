@@ -6,12 +6,14 @@ import NewsPage from './pages/NewsPage'
 import GalleryPage from './pages/GalleryPage'
 import MinistryPage from './pages/MinistryPage'
 import ActivityDetailPage from './pages/ActivityDetailPage'
+import BiblePage from './pages/BiblePage'
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/alkitab" element={<BiblePage />} />
         <Route path="/layanan" element={<ServicesPage />} />
         <Route path="/tata-ibadah" element={<LiturgyPage />} />
         <Route path="/warta" element={<NewsPage />} />
