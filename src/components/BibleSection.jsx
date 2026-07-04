@@ -175,26 +175,26 @@ export default function BibleSection() {
       </div>
 
       {/* ─── Stats Row ─── */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-xl mx-auto">
-        <div className="glass-panel rounded-xl p-3 sm:p-4 text-center group hover:bg-white/60 transition-all duration-300">
-          <span className="block font-headline-md text-[20px] sm:text-[28px] text-primary mb-0.5">
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+        <div className="flex-1 min-w-[100px] max-w-[160px] glass-panel rounded-xl p-3 sm:p-4 text-center group hover:bg-white/60 transition-all duration-300">
+          <span className="block font-headline-md text-[24px] sm:text-[32px] text-primary mb-0.5">
             <AnimatedCount target={totalBooks} />
           </span>
-          <span className="font-label-sm text-[10px] sm:text-[11px] text-on-surface-variant uppercase tracking-wider">
+          <span className="font-label-sm text-[11px] sm:text-[12px] text-on-surface-variant uppercase tracking-wider">
             {labels.totalBooks}
           </span>
         </div>
-        <div className="glass-panel rounded-xl p-3 sm:p-4 text-center group hover:bg-white/60 transition-all duration-300">
-          <span className="block font-headline-md text-[20px] sm:text-[28px] text-secondary mb-0.5">
+        <div className="flex-1 min-w-[100px] max-w-[160px] glass-panel rounded-xl p-3 sm:p-4 text-center group hover:bg-white/60 transition-all duration-300">
+          <span className="block font-headline-md text-[24px] sm:text-[32px] text-secondary mb-0.5">
             <AnimatedCount target={totalChapters} duration={1800} />
           </span>
-          <span className="font-label-sm text-[10px] sm:text-[11px] text-on-surface-variant uppercase tracking-wider">
+          <span className="font-label-sm text-[11px] sm:text-[12px] text-on-surface-variant uppercase tracking-wider">
             {labels.chapters}
           </span>
         </div>
-        <div className="glass-panel rounded-xl p-3 sm:p-4 text-center group hover:bg-white/60 transition-all duration-300">
-          <span className="block font-headline-md text-[20px] sm:text-[28px] text-tertiary mb-0.5">2</span>
-          <span className="font-label-sm text-[10px] sm:text-[11px] text-on-surface-variant uppercase tracking-wider">
+        <div className="flex-1 min-w-[100px] max-w-[160px] glass-panel rounded-xl p-3 sm:p-4 text-center group hover:bg-white/60 transition-all duration-300">
+          <span className="block font-headline-md text-[24px] sm:text-[32px] text-tertiary mb-0.5">2</span>
+          <span className="font-label-sm text-[11px] sm:text-[12px] text-on-surface-variant uppercase tracking-wider">
             {lang === 'indonesia' ? 'Bahasa' : 'Hata'}
           </span>
         </div>
