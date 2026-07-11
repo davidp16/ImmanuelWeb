@@ -906,7 +906,8 @@ function LiturgyManager({ data, setSubmissionsData }) {
     </div>
   );
 }
-\n// News Manager Component
+
+// News Manager Component
 function NewsManager({ data, setSubmissionsData }) {
   const [activeView, setActiveView] = useState('list'); // 'list' or 'upload' or 'edit'
   const [editData, setEditData] = useState(null);
