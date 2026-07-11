@@ -44,8 +44,15 @@ router.get('/passage/:book/:chapter', async (req, res) => {
   const filePath = path.join(dataDir, `passage_${version}_${book}_${chapter}.json`);
 
   if (fs.existsSync(filePath)) {
-    const rawData = fs.readFileSync(filePath, 'utf-8');
-    return res.json({ data: JSON.parse(rawData) });
+    try {
+      const rawData = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(rawData);
+      if (parsed.verses && parsed.verses.length > 0) {
+        return res.json({ data: parsed });
+      }
+    } catch (e) {
+      console.error('Invalid cache file, refetching...');
+    }
   }
 
   try {
