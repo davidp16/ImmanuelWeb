@@ -49,51 +49,37 @@ router.get('/passage/:book/:chapter', async (req, res) => {
   }
 
   try {
-    const fetchUrl = `https://alkitab.mobi/${version}/${encodeURIComponent(book)}/${chapter}`;
+    // We use alkitab.sabda.org API instead of alkitab.mobi to avoid AWS blocking
+    const fetchUrl = `https://alkitab.sabda.org/api/passage.php?passage=${encodeURIComponent(book + ' ' + chapter)}&version=${version}`;
     
-    // Some hosting blocks bots, so use a real user agent
     const response = await fetch(fetchUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
     });
     
-    if (!response.ok) throw new Error('Failed to fetch from alkitab.mobi');
+    if (!response.ok) throw new Error('Failed to fetch from sabda API');
     
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    const xml = await response.text();
+    const $ = cheerio.load(xml, { xmlMode: true });
     
     let verses = [];
-    let lastVerse = 0;
     
-    $('p').each((i, el) => {
-      let data = $(el);
-      let content = data.find('[data-begin]').first().text().trim();
-      let title = data.find('.paragraphtitle').first().text().trim();
-      let verseText = data.find('.reftext').children().first().text().trim();
-      
-      let verse = verseText ? parseInt(verseText, 10) : 0;
-      
-      if (!title && !content) {
-        data.find('.reftext').remove();
-        content = data.text().trim();
-      }
-      
-      // Ignore footer copyright texts
-      if (content.includes('Yayasan Lembaga SABDA') || content.includes('Copyright')) return;
-      
-      if (data.attr('hidden') === 'hidden' || data.hasClass('loading') || data.hasClass('error')) {
-        return;
-      }
+    $('verse').each((i, el) => {
+      let verseNumText = $(el).find('number').text();
+      let verseNum = verseNumText ? parseInt(verseNumText, 10) : 0;
+      let title = $(el).find('title').text();
+      let text = $(el).find('text').text();
       
       if (title) {
         verses.push({ verse: 0, type: 'title', content: title });
-      } else if (content) {
-        content = content.replace(/^\[\d+\]\s*/, '');
-        content = content.replace(/^\d+\s*/, '');
-        
-        verses.push({ verse: verse, type: 'content', content: content });
-        lastVerse = verse;
+      }
+      if (text) {
+        verses.push({ verse: verseNum, type: 'content', content: text });
       }
     });
+
+    if (verses.length === 0) {
+       throw new Error('No verses found');
+    }
 
     const parsedData = { book: { name: book, chapter }, verses };
     

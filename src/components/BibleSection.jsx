@@ -334,8 +334,8 @@ export default function BibleSection() {
                     <span className="material-symbols-outlined text-[48px] text-error mb-4 block">
                       error
                     </span>
-                    <p className="text-on-surface-variant font-body-md">
-                      {lang === 'indonesia' ? 'Gagal memuat ayat. Pastikan server lokal sudah menyala dan data tersedia.' : 'Gagal memuat ayat.'}
+                    <p className="text-on-surface-variant font-body-md mt-4 max-w-sm mx-auto">
+                      {lang === 'indonesia' ? 'Gagal memuat ayat. Pastikan koneksi internet stabil atau muat ulang halaman.' : 'Gagal memuat ayat.'}
                     </p>
                   </div>
                 ) : (
