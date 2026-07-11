@@ -50,18 +50,36 @@ router.get('/kj/:id', async (req, res) => {
 });
 
 // Route to get Buku Ende by song number
-router.get('/ende/:id', async (req, res) => {
-  // TODO: We need a valid data source for Buku Ende. 
-  // For now, return a placeholder so the UI functions.
-  const { id } = req.params;
-  res.json({
-    title: `Buku Ende No. ${id}`,
-    lyrics: [
-      "1.",
-      "Lirik untuk Buku Ende saat ini sedang dalam proses digitalisasi.",
-      "Mohon kembali lagi nanti."
-    ]
-  });
+router.get('/ende/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Read the static JSON file
+    const dataPath = path.join(__dirname, '../data/bukuEnde.json');
+    if (!fs.existsSync(dataPath)) {
+      return res.status(500).json({ error: 'Database Buku Ende belum tersedia.' });
+    }
+    
+    const rawData = fs.readFileSync(dataPath, 'utf-8');
+    const bukuEndeDb = JSON.parse(rawData);
+    
+    // Find the song
+    const song = bukuEndeDb.find(s => s.id === id);
+    
+    if (!song) {
+      return res.status(404).json({ error: `Buku Ende No. ${id} tidak ditemukan.` });
+    }
+    
+    res.json({
+      title: song.title,
+      lyrics: song.lyrics
+    });
+  } catch (error) {
+    console.error('Error fetching Buku Ende:', error);
+    res.status(500).json({ error: 'Gagal mengambil data Buku Ende.' });
+  }
 });
 
 module.exports = router;
