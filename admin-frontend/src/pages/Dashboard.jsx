@@ -107,6 +107,18 @@ export default function Dashboard() {
         }
       })
       .catch(err => console.error("Error fetching schedules:", err));
+
+    fetch('/api/services/news')
+      .then(res => res.json())
+      .then(data => {
+        if(data) {
+          setSubmissionsData(prev => ({
+            ...prev,
+            news: data || []
+          }));
+        }
+      })
+      .catch(err => console.error("Error fetching news:", err));
   }, [navigate]);
 
   return (
@@ -184,7 +196,7 @@ export default function Dashboard() {
           
           {/* Form Uploads */}
           {activeTab === 'liturgy' && <UploadForm endpoint="liturgy" title="Tata Ibadah" hasDescription={false} />}
-          {activeTab === 'news' && <UploadForm endpoint="news" title="Warta Jemaat" hasDescription={true} />}
+          {activeTab === 'news' && <NewsManager data={submissionsData.news} setSubmissionsData={setSubmissionsData} />}
           {activeTab === 'gallery' && <UploadForm endpoint="gallery" title="Galeri" hasDescription={false} isImageOnly={true} />}
           {activeTab === 'activities' && <ActivityManager data={submissionsData.activities} setSubmissionsData={setSubmissionsData} />}
           {activeTab === 'schedules' && <ScheduleManager data={submissionsData.schedules} setSubmissionsData={setSubmissionsData} />}
@@ -238,10 +250,12 @@ export default function Dashboard() {
   );
 }
 
+
 // Schedule Manager Component
 function ScheduleManager({ data, setSubmissionsData }) {
-  const [activeView, setActiveView] = useState('list'); // 'list' or 'upload'
+  const [activeView, setActiveView] = useState('list'); // 'list' or 'upload' or 'edit'
   const [status, setStatus] = useState(null);
+  const [editData, setEditData] = useState(null);
 
   const daysOfWeek = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
@@ -265,6 +279,11 @@ function ScheduleManager({ data, setSubmissionsData }) {
     }
   };
 
+  const openEdit = (item) => {
+    setEditData(item);
+    setActiveView('edit');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('loading');
@@ -273,7 +292,6 @@ function ScheduleManager({ data, setSubmissionsData }) {
     const formData = new FormData(e.target);
     const scheduleData = Object.fromEntries(formData.entries());
     
-    // Default styling mapping for common icons
     const iconStyles = {
       'church': { bg: 'bg-primary-container/60', color: 'text-on-primary-container' },
       'groups': { bg: 'bg-primary-container/60', color: 'text-on-primary-container' },
@@ -291,9 +309,12 @@ function ScheduleManager({ data, setSubmissionsData }) {
     scheduleData.iconBg = style.bg;
     scheduleData.iconColor = style.color;
 
+    const url = activeView === 'edit' ? `/api/admin/schedules/${editData.id}` : `/api/admin/schedules`;
+    const method = activeView === 'edit' ? 'PUT' : 'POST';
+
     try {
-      const response = await fetch(`/api/admin/schedules`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -305,13 +326,15 @@ function ScheduleManager({ data, setSubmissionsData }) {
         const newItem = await response.json();
         setSubmissionsData(prev => ({
           ...prev,
-          schedules: [...prev.schedules, newItem]
+          schedules: activeView === 'edit' 
+            ? prev.schedules.map(s => s.id === newItem.id ? newItem : s)
+            : [...prev.schedules, newItem]
         }));
         setStatus('success');
-        e.target.reset();
         setTimeout(() => {
           setStatus(null);
           setActiveView('list');
+          setEditData(null);
         }, 1500);
       } else {
         setStatus('error');
@@ -322,11 +345,11 @@ function ScheduleManager({ data, setSubmissionsData }) {
     }
   };
 
-  if (activeView === 'upload') {
+  if (activeView === 'upload' || activeView === 'edit') {
     return (
       <div className="relative animate-fade-in-up">
         <button 
-          onClick={() => setActiveView('list')} 
+          onClick={() => { setActiveView('list'); setEditData(null); }} 
           className="absolute top-0 left-0 flex items-center gap-2 px-4 py-2 bg-surface-container hover:bg-surface-variant text-on-surface rounded-full transition-colors font-label-md border border-outline-variant/30 shadow-sm z-10"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
@@ -338,20 +361,17 @@ function ScheduleManager({ data, setSubmissionsData }) {
             <span className="material-symbols-outlined text-[40px] text-primary">calendar_add_on</span>
           </div>
           
-          <h2 className="font-display-md text-3xl text-on-surface mb-3 text-center">Tambah Jadwal</h2>
-          <p className="font-body-lg text-on-surface-variant mb-10 text-center border-b border-outline-variant/20 pb-8 w-full">
-            Tambahkan kegiatan rutin ke dalam jadwal mingguan jemaat.
-          </p>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+          <h2 className="font-display-md text-3xl text-on-surface mb-3 text-center">{activeView === 'edit' ? 'Edit Jadwal' : 'Tambah Jadwal'}</h2>
+          
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full mt-6">
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex flex-col gap-2 shrink-0 sm:w-1/3">
                 <label className="font-label-lg font-bold text-on-surface">Hari</label>
                 <select 
                   name="day" 
                   required
+                  defaultValue={editData?.day}
                   className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md shadow-sm appearance-none"
-                  style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23131313%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem top 50%', backgroundSize: '0.65rem auto' }}
                 >
                   {daysOfWeek.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
@@ -362,7 +382,7 @@ function ScheduleManager({ data, setSubmissionsData }) {
                   type="text" 
                   name="title" 
                   required
-                  placeholder="Contoh: Ibadah Minggu Pagi"
+                  defaultValue={editData?.title}
                   className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md shadow-sm" 
                 />
               </div>
@@ -375,7 +395,7 @@ function ScheduleManager({ data, setSubmissionsData }) {
                   type="text" 
                   name="location" 
                   required
-                  placeholder="Contoh: Gedung Gereja Utama"
+                  defaultValue={editData?.location}
                   className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md shadow-sm" 
                 />
               </div>
@@ -385,7 +405,7 @@ function ScheduleManager({ data, setSubmissionsData }) {
                   type="text" 
                   name="time" 
                   required
-                  placeholder="Contoh: 09:00 - 11:00 WIB"
+                  defaultValue={editData?.time}
                   className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md shadow-sm" 
                 />
               </div>
@@ -398,7 +418,7 @@ function ScheduleManager({ data, setSubmissionsData }) {
                   type="text" 
                   name="category" 
                   required
-                  placeholder="Contoh: Umum, Kategorial Ama, Anak"
+                  defaultValue={editData?.category}
                   className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md shadow-sm" 
                 />
               </div>
@@ -407,8 +427,8 @@ function ScheduleManager({ data, setSubmissionsData }) {
                 <select 
                   name="icon" 
                   required
+                  defaultValue={editData?.icon}
                   className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md shadow-sm appearance-none material-symbols-outlined"
-                  style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23131313%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem top 50%', backgroundSize: '0.65rem auto' }}
                 >
                   <option value="church">church (Gereja)</option>
                   <option value="groups">groups (Kumpulan)</option>
@@ -436,7 +456,7 @@ function ScheduleManager({ data, setSubmissionsData }) {
 
             {status === 'success' && (
               <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 text-green-700 rounded-2xl flex justify-center gap-3 font-label-lg">
-                Jadwal berhasil ditambahkan!
+                Jadwal berhasil disimpan!
               </div>
             )}
             {status === 'error' && (
@@ -492,10 +512,17 @@ function ScheduleManager({ data, setSubmissionsData }) {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                      <span className="px-3 py-1 bg-surface-variant/30 text-on-surface-variant rounded-full font-label-sm border border-outline-variant/20">
+                    <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                      <span className="px-3 py-1 bg-surface-variant/30 text-on-surface-variant rounded-full font-label-sm border border-outline-variant/20 mr-2">
                         {item.category}
                       </span>
+                      <button 
+                        onClick={() => openEdit(item)}
+                        className="text-primary hover:bg-primary-container/50 p-2 rounded-full transition-colors shrink-0"
+                        title="Edit"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                      </button>
                       <button 
                         onClick={() => handleDelete(item.id)}
                         className="text-error hover:bg-error-container/50 p-2 rounded-full transition-colors shrink-0"
@@ -520,9 +547,12 @@ function ScheduleManager({ data, setSubmissionsData }) {
   );
 }
 
+
 // Activity Manager Component
 function ActivityManager({ data, setSubmissionsData }) {
-  const [activeView, setActiveView] = useState('list'); // 'list' or 'upload'
+  const [activeView, setActiveView] = useState('list'); // 'list' or 'upload' or 'edit'
+  const [editData, setEditData] = useState(null);
+  const [status, setStatus] = useState(null);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Yakin ingin menghapus informasi/kegiatan ini?')) return;
@@ -544,17 +574,85 @@ function ActivityManager({ data, setSubmissionsData }) {
     }
   };
 
-  if (activeView === 'upload') {
+  const openEdit = (item) => {
+    setEditData(item);
+    setActiveView('edit');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData(e.target);
+    
+    const url = activeView === 'edit' ? `/api/admin/activities/${editData.id}` : `/api/admin/activities`;
+    const method = activeView === 'edit' ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const newItem = await response.json();
+        setSubmissionsData(prev => ({
+          ...prev,
+          activities: activeView === 'edit' 
+            ? prev.activities.map(a => a.id === newItem.id ? newItem : a)
+            : [newItem, ...prev.activities]
+        }));
+        setStatus('success');
+        setTimeout(() => {
+          setStatus(null);
+          setActiveView('list');
+          setEditData(null);
+        }, 1500);
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setStatus('error');
+    }
+  };
+
+  if (activeView === 'upload' || activeView === 'edit') {
     return (
       <div className="relative">
         <button 
-          onClick={() => setActiveView('list')} 
+          onClick={() => { setActiveView('list'); setEditData(null); }} 
           className="absolute top-0 left-0 flex items-center gap-2 px-4 py-2 bg-surface-container hover:bg-surface-variant text-on-surface rounded-full transition-colors font-label-md border border-outline-variant/30 shadow-sm z-10"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Kembali ke Daftar
         </button>
-        <UploadForm endpoint="activities" title="Info & Kegiatan" hasDescription={true} isImageOnly={true} />
+        <div className="flex flex-col items-center w-full max-w-2xl mx-auto pt-10">
+          <h2 className="font-display-md text-3xl text-on-surface mb-6 text-center">{activeView === 'edit' ? 'Edit Info & Kegiatan' : 'Tambah Info & Kegiatan'}</h2>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Judul</label>
+              <input type="text" name="title" required defaultValue={editData?.title} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Deskripsi</label>
+              <textarea name="description" rows="4" required defaultValue={editData?.description} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md"></textarea>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Gambar (Biarkan kosong jika tidak ingin mengubah)</label>
+              <input type="file" name="image" accept="image/*" required={activeView === 'upload'} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-label-md file:bg-primary-container file:text-on-primary-container hover:file:bg-primary hover:file:text-on-primary transition-all cursor-pointer" />
+            </div>
+            <button type="submit" disabled={status === 'loading'} className="mt-4 bg-primary text-on-primary py-4 px-8 rounded-full font-headline-sm hover:opacity-90 flex justify-center shadow-lg disabled:opacity-50">
+              {status === 'loading' ? 'Menyimpan...' : 'Simpan Kegiatan'}
+            </button>
+            {status === 'success' && <div className="p-4 bg-green-500/10 text-green-700 rounded-2xl">Berhasil disimpan!</div>}
+            {status === 'error' && <div className="p-4 bg-red-500/10 text-red-700 rounded-2xl">Gagal menyimpan.</div>}
+          </form>
+        </div>
       </div>
     );
   }
@@ -594,14 +692,200 @@ function ActivityManager({ data, setSubmissionsData }) {
                 <p className="font-body-sm text-on-surface-variant line-clamp-2 mb-4 flex-grow" title={item.description}>{item.description}</p>
                 <div className="flex justify-between items-center mt-auto border-t border-outline-variant/20 pt-3">
                   <span className="text-[11px] text-on-surface-variant font-label-sm">{formatDate(item.createdAt)}</span>
-                  <button 
-                    onClick={() => handleDelete(item.id)}
-                    className="text-error hover:bg-error-container/50 p-1.5 rounded-full transition-colors"
-                    title="Hapus"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">delete</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => openEdit(item)}
+                      className="text-primary hover:bg-primary-container/50 p-1.5 rounded-full transition-colors"
+                      title="Edit"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(item.id)}
+                      className="text-error hover:bg-error-container/50 p-1.5 rounded-full transition-colors"
+                      title="Hapus"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                  </div>
                 </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// News Manager Component
+function NewsManager({ data, setSubmissionsData }) {
+  const [activeView, setActiveView] = useState('list'); // 'list' or 'upload' or 'edit'
+  const [editData, setEditData] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Yakin ingin menghapus warta jemaat ini?')) return;
+    
+    const token = localStorage.getItem('adminToken');
+    try {
+      const res = await fetch(`/api/admin/news/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setSubmissionsData(prev => ({
+          ...prev,
+          news: prev.news.filter(item => item.id !== id)
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to delete news", error);
+    }
+  };
+
+  const openEdit = (item) => {
+    setEditData(item);
+    setActiveView('edit');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData(e.target);
+    
+    const url = activeView === 'edit' ? `/api/admin/news/${editData.id}` : `/api/admin/news`;
+    const method = activeView === 'edit' ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const newItem = await response.json();
+        setSubmissionsData(prev => ({
+          ...prev,
+          news: activeView === 'edit' 
+            ? prev.news.map(n => n.id === newItem.id ? newItem : n)
+            : [newItem, ...prev.news]
+        }));
+        setStatus('success');
+        setTimeout(() => {
+          setStatus(null);
+          setActiveView('list');
+          setEditData(null);
+        }, 1500);
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setStatus('error');
+    }
+  };
+
+  if (activeView === 'upload' || activeView === 'edit') {
+    return (
+      <div className="relative">
+        <button 
+          onClick={() => { setActiveView('list'); setEditData(null); }} 
+          className="absolute top-0 left-0 flex items-center gap-2 px-4 py-2 bg-surface-container hover:bg-surface-variant text-on-surface rounded-full transition-colors font-label-md border border-outline-variant/30 shadow-sm z-10"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Kembali ke Daftar
+        </button>
+        <div className="flex flex-col items-center w-full max-w-2xl mx-auto pt-10">
+          <h2 className="font-display-md text-3xl text-on-surface mb-6 text-center">{activeView === 'edit' ? 'Edit Warta Jemaat' : 'Tambah Warta Jemaat'}</h2>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Judul Warta</label>
+              <input type="text" name="title" required defaultValue={editData?.title} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Tanggal Warta</label>
+              <input type="date" name="date" required defaultValue={editData?.date ? new Date(editData.date).toISOString().split('T')[0] : ''} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Deskripsi / Ringkasan</label>
+              <textarea name="description" rows="3" defaultValue={editData?.description} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md"></textarea>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">File PDF / Gambar (Biarkan kosong jika tidak mengubah)</label>
+              <input type="file" name="file" accept="image/*,.pdf" required={activeView === 'upload'} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-label-md file:bg-primary-container file:text-on-primary-container hover:file:bg-primary hover:file:text-on-primary transition-all cursor-pointer" />
+            </div>
+            <button type="submit" disabled={status === 'loading'} className="mt-4 bg-primary text-on-primary py-4 px-8 rounded-full font-headline-sm hover:opacity-90 flex justify-center shadow-lg disabled:opacity-50">
+              {status === 'loading' ? 'Menyimpan...' : 'Simpan Warta'}
+            </button>
+            {status === 'success' && <div className="p-4 bg-green-500/10 text-green-700 rounded-2xl">Berhasil disimpan!</div>}
+            {status === 'error' && <div className="p-4 bg-red-500/10 text-red-700 rounded-2xl">Gagal menyimpan.</div>}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row mb-6 gap-4">
+        <div>
+          <h2 className="font-display-sm text-2xl text-on-surface mb-1">Manajemen Warta Jemaat</h2>
+          <p className="font-body-md text-on-surface-variant">Daftar warta jemaat mingguan.</p>
+        </div>
+        <button 
+          onClick={() => setActiveView('upload')} 
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:opacity-90 text-on-primary rounded-full transition-colors font-label-md shadow-sm shrink-0"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          Tambah Warta
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {data.length === 0 ? (
+          <div className="py-12 text-center text-on-surface-variant font-body-md border border-outline-variant/30 rounded-2xl bg-white">
+            Belum ada warta jemaat.
+          </div>
+        ) : (
+          data.map((item) => (
+            <div key={item.id} className="bg-white border border-outline-variant/30 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-surface-container-low transition-colors">
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary-container text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-2xl">campaign</span>
+                </div>
+                <div>
+                  <h3 className="font-headline-sm font-bold text-on-surface">{item.title}</h3>
+                  <p className="font-body-sm text-on-surface-variant mb-1">{formatDate(item.date)}</p>
+                  <p className="font-body-sm text-on-surface-variant line-clamp-2">{item.description}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {item.fileUrl && (
+                  <a href={item.fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline font-label-md text-sm border border-primary/30 px-3 py-1.5 rounded-full">
+                    Lihat File
+                  </a>
+                )}
+                <button 
+                  onClick={() => openEdit(item)}
+                  className="text-primary hover:bg-primary-container/50 p-2 rounded-full transition-colors"
+                  title="Edit"
+                >
+                  <span className="material-symbols-outlined text-[20px]">edit</span>
+                </button>
+                <button 
+                  onClick={() => handleDelete(item.id)}
+                  className="text-error hover:bg-error-container/50 p-2 rounded-full transition-colors"
+                  title="Hapus"
+                >
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
               </div>
             </div>
           ))

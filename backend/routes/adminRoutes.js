@@ -83,6 +83,46 @@ router.post('/news', upload.single('file'), async (req, res) => {
   }
 });
 
+router.delete('/news/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await prisma.news.delete({
+      where: { id }
+    });
+    res.status(200).json({ message: 'News deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete news' });
+  }
+});
+
+router.put('/news/:id', upload.single('file'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { title, date, description } = req.body;
+    
+    const data = {
+      title,
+      date: new Date(date),
+      description
+    };
+
+    if (req.file) {
+      data.fileUrl = getFileUrl(req, req.file.filename);
+    }
+    
+    const news = await prisma.news.update({
+      where: { id },
+      data
+    });
+    
+    res.status(200).json(news);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update news' });
+  }
+});
+
 // ----------------------------------------
 // GALERI (GALLERY)
 // ----------------------------------------
@@ -158,6 +198,29 @@ router.delete('/activities/:id', async (req, res) => {
   }
 });
 
+router.put('/activities/:id', upload.single('image'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { title, description } = req.body;
+    
+    const data = { title, description };
+
+    if (req.file) {
+      data.imageUrl = getFileUrl(req, req.file.filename);
+    }
+    
+    const activityItem = await prisma.activity.update({
+      where: { id },
+      data
+    });
+    
+    res.status(200).json(activityItem);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update activity info' });
+  }
+});
+
 router.post('/schedules', async (req, res) => {
   try {
     const { day, title, location, time, category, icon, iconBg, iconColor } = req.body;
@@ -192,6 +255,32 @@ router.delete('/schedules/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to delete schedule' });
+  }
+});
+
+router.put('/schedules/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { day, title, location, time, category, icon, iconBg, iconColor } = req.body;
+    
+    const scheduleItem = await prisma.schedule.update({
+      where: { id },
+      data: {
+        day,
+        title,
+        location,
+        time,
+        category,
+        icon,
+        iconBg,
+        iconColor,
+      }
+    });
+    
+    res.status(200).json(scheduleItem);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update schedule' });
   }
 });
 
