@@ -119,6 +119,22 @@ export default function Dashboard() {
         }
       })
       .catch(err => console.error("Error fetching news:", err));
+
+    fetch('/api/admin/liturgy', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if(data) {
+          setSubmissionsData(prev => ({
+            ...prev,
+            liturgy: data || []
+          }));
+        }
+      })
+      .catch(err => console.error("Error fetching liturgy:", err));
   }, [navigate]);
 
   return (
@@ -195,7 +211,7 @@ export default function Dashboard() {
           {activeTab === 'dashboard' && <DashboardOverview data={submissionsData} onCardClick={setActiveTab} />}
           
           {/* Form Uploads */}
-          {activeTab === 'liturgy' && <UploadForm endpoint="liturgy" title="Tata Ibadah" hasDescription={false} />}
+          {activeTab === 'liturgy' && <LiturgyManager data={submissionsData.liturgy} setSubmissionsData={setSubmissionsData} />}
           {activeTab === 'news' && <NewsManager data={submissionsData.news} setSubmissionsData={setSubmissionsData} />}
           {activeTab === 'gallery' && <UploadForm endpoint="gallery" title="Galeri" hasDescription={false} isImageOnly={true} />}
           {activeTab === 'activities' && <ActivityManager data={submissionsData.activities} setSubmissionsData={setSubmissionsData} />}
@@ -719,7 +735,178 @@ function ActivityManager({ data, setSubmissionsData }) {
 }
 
 
-// News Manager Component
+
+// Liturgy Manager Component
+function LiturgyManager({ data, setSubmissionsData }) {
+  const [activeView, setActiveView] = useState('list');
+  const [editData, setEditData] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Yakin ingin menghapus tata ibadah ini?')) return;
+    
+    const token = localStorage.getItem('adminToken');
+    try {
+      const res = await fetch(`/api/admin/liturgy/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setSubmissionsData(prev => ({
+          ...prev,
+          liturgy: prev.liturgy.filter(item => item.id !== id)
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to delete liturgy", error);
+    }
+  };
+
+  const openEdit = (item) => {
+    setEditData(item);
+    setActiveView('edit');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData(e.target);
+    
+    const url = activeView === 'edit' ? `/api/admin/liturgy/${editData.id}` : `/api/admin/liturgy`;
+    const method = activeView === 'edit' ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const newItem = await response.json();
+        setSubmissionsData(prev => ({
+          ...prev,
+          liturgy: activeView === 'edit' 
+            ? prev.liturgy.map(n => n.id === newItem.id ? newItem : n)
+            : [newItem, ...prev.liturgy]
+        }));
+        setStatus('success');
+        setTimeout(() => {
+          setStatus(null);
+          setActiveView('list');
+          setEditData(null);
+        }, 1500);
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setStatus('error');
+    }
+  };
+
+  if (activeView === 'upload' || activeView === 'edit') {
+    return (
+      <div className="relative">
+        <button 
+          onClick={() => { setActiveView('list'); setEditData(null); }} 
+          className="absolute top-0 left-0 flex items-center gap-2 px-4 py-2 bg-surface-container hover:bg-surface-variant text-on-surface rounded-full transition-colors font-label-md border border-outline-variant/30 shadow-sm z-10"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Kembali ke Daftar
+        </button>
+        <div className="flex flex-col items-center w-full max-w-2xl mx-auto pt-10">
+          <h2 className="font-display-md text-3xl text-on-surface mb-6 text-center">{activeView === 'edit' ? 'Edit Tata Ibadah' : 'Tambah Tata Ibadah'}</h2>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Judul Tata Ibadah</label>
+              <input type="text" name="title" required defaultValue={editData?.title} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">Tanggal Ibadah</label>
+              <input type="date" name="date" required defaultValue={editData?.date ? new Date(editData.date).toISOString().split('T')[0] : ''} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors font-body-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-lg font-bold text-on-surface">File PDF / Gambar (Biarkan kosong jika tidak mengubah)</label>
+              <input type="file" name="file" accept="image/*,.pdf" required={activeView === 'upload'} className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-2xl p-4 text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-label-md file:bg-primary-container file:text-on-primary-container hover:file:bg-primary hover:file:text-on-primary transition-all cursor-pointer" />
+            </div>
+            <button type="submit" disabled={status === 'loading'} className="mt-4 bg-primary text-on-primary py-4 px-8 rounded-full font-headline-sm hover:opacity-90 flex justify-center shadow-lg disabled:opacity-50">
+              {status === 'loading' ? 'Menyimpan...' : 'Simpan Tata Ibadah'}
+            </button>
+            {status === 'success' && <div className="p-4 bg-green-500/10 text-green-700 rounded-2xl">Berhasil disimpan!</div>}
+            {status === 'error' && <div className="p-4 bg-red-500/10 text-red-700 rounded-2xl">Gagal menyimpan.</div>}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row mb-6 gap-4">
+        <div>
+          <h2 className="font-display-sm text-2xl text-on-surface mb-1">Manajemen Tata Ibadah</h2>
+          <p className="font-body-md text-on-surface-variant">Daftar file tata ibadah.</p>
+        </div>
+        <button 
+          onClick={() => setActiveView('upload')} 
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:opacity-90 text-on-primary rounded-full transition-colors font-label-md shadow-sm shrink-0"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          Tambah Baru
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {!data || data.length === 0 ? (
+          <div className="py-12 text-center text-on-surface-variant font-body-md border border-outline-variant/30 rounded-2xl bg-white">
+            Belum ada tata ibadah.
+          </div>
+        ) : (
+          data.map((item) => (
+            <div key={item.id} className="bg-white border border-outline-variant/30 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-surface-container-low transition-colors">
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary-container text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-2xl">menu_book</span>
+                </div>
+                <div>
+                  <h3 className="font-headline-sm font-bold text-on-surface">{item.title}</h3>
+                  <p className="font-body-sm text-on-surface-variant mb-1">{formatDate(item.date)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {item.fileUrl && (
+                  <a href={item.fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline font-label-md text-sm border border-primary/30 px-3 py-1.5 rounded-full">
+                    Lihat File
+                  </a>
+                )}
+                <button 
+                  onClick={() => openEdit(item)}
+                  className="text-primary hover:bg-primary-container/50 p-2 rounded-full transition-colors"
+                  title="Edit"
+                >
+                  <span className="material-symbols-outlined text-[20px]">edit</span>
+                </button>
+                <button 
+                  onClick={() => handleDelete(item.id)}
+                  className="text-error hover:bg-error-container/50 p-2 rounded-full transition-colors"
+                  title="Hapus"
+                >
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+\n// News Manager Component
 function NewsManager({ data, setSubmissionsData }) {
   const [activeView, setActiveView] = useState('list'); // 'list' or 'upload' or 'edit'
   const [editData, setEditData] = useState(null);

@@ -49,6 +49,45 @@ router.post('/liturgy', upload.single('file'), async (req, res) => {
   }
 });
 
+router.delete('/liturgy/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await prisma.liturgy.delete({
+      where: { id }
+    });
+    res.status(200).json({ message: 'Liturgy deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete liturgy' });
+  }
+});
+
+router.put('/liturgy/:id', upload.single('file'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { title, date } = req.body;
+    
+    const data = {
+      title,
+      date: new Date(date)
+    };
+
+    if (req.file) {
+      data.fileUrl = getFileUrl(req, req.file.filename);
+    }
+    
+    const liturgy = await prisma.liturgy.update({
+      where: { id },
+      data
+    });
+    
+    res.status(200).json(liturgy);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update liturgy' });
+  }
+});
+
 // ----------------------------------------
 // WARTA JEMAAT (NEWS)
 // ----------------------------------------
