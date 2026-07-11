@@ -8,9 +8,8 @@ const prisma = new PrismaClient();
 // Apply auth middleware to all admin routes
 router.use(verifyToken);
 
-// Helper to construct full URL for the uploaded file
 const getFileUrl = (req, filename) => {
-  return `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+  return `https://hkbpimmanuelkutajaya.or.id/uploads/${filename}`;
 };
 
 // ----------------------------------------
