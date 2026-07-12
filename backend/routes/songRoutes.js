@@ -50,31 +50,37 @@ router.get('/kj/:id', async (req, res) => {
 });
 
 // Route to get Buku Ende by song number
-router.get('/ende/:id', (req, res) => {
+router.get('/ende/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const fs = require('fs');
-    const path = require('path');
+    const url = `https://www.ende.sibirong.com/index?nomor=${id}`;
     
-    // Read the static JSON file
-    const dataPath = path.join(__dirname, '../data/bukuEnde.json');
-    if (!fs.existsSync(dataPath)) {
-      return res.status(500).json({ error: 'Database Buku Ende belum tersedia.' });
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!response.ok) {
+      return res.status(404).json({ error: `Gagal mengakses data Buku Ende No. ${id}` });
     }
+    const html = await response.text();
     
-    const rawData = fs.readFileSync(dataPath, 'utf-8');
-    const bukuEndeDb = JSON.parse(rawData);
+    const metaTitleMatch = html.match(/<meta name="title" content="([^"]*)">/);
+    const metaDescriptionMatch = html.match(/<meta name="description" content="([^"]*)">/);
     
-    // Find the song
-    const song = bukuEndeDb.find(s => s.id === id);
+    let fullTitle = metaTitleMatch ? metaTitleMatch[1] : null;
+    let songLyrics = metaDescriptionMatch ? metaDescriptionMatch[1] : null;
     
-    if (!song) {
+    if (!fullTitle || !songLyrics || fullTitle.trim() === '' || songLyrics.trim() === '') {
       return res.status(404).json({ error: `Buku Ende No. ${id} tidak ditemukan.` });
     }
     
+    let title = fullTitle.split('-').pop().trim();
+    title = title.replace(/\\n|\\r|\\t/g, '').trim();
+    
+    songLyrics = songLyrics.replace(/\\n|\\r|\\t/g, '').trim();
+    const verses = songLyrics.split(/\d+\.\s/).filter(verse => verse.trim() !== '');
+    const lyrics = verses.map((verse, index) => `${index + 1}. ${verse.trim()}`);
+    
     res.json({
-      title: song.title,
-      lyrics: song.lyrics
+      title: `Buku Ende No. ${id} - ${title}`,
+      lyrics
     });
   } catch (error) {
     console.error('Error fetching Buku Ende:', error);

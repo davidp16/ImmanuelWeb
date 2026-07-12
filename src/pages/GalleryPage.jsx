@@ -34,6 +34,29 @@ export default function GalleryPage() {
     return itemCategory === activeFilter;
   });
 
+  const handleDownload = async (url, title, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      const extension = url.split('.').pop().split('?')[0] || 'jpg';
+      const cleanTitle = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      a.download = `HKBP-Immanuel-${cleanTitle}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Gagal mengunduh gambar:', err);
+      // Fallback
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <TopNavBar />
@@ -100,6 +123,15 @@ export default function GalleryPage() {
                   <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     {item.category || 'Umum'}
                   </div>
+                  
+                  {/* Download Button */}
+                  <button
+                    onClick={(e) => handleDownload(item.imageUrl, item.title, e)}
+                    className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-primary backdrop-blur-md text-white p-2 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"
+                    title="Unduh Gambar"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">download</span>
+                  </button>
                   
                   <div className="relative overflow-hidden bg-surface-container-highest">
                     <img 
